@@ -39,7 +39,7 @@ public class CompressedIndex implements Searchable<Set<Integer>>, BooleanSearcha
     }
 
     private void compress(Iterator<Entry<String, TermInvertedIndex>> entryIterator) {
-        entryIterator.forEachRemaining(it -> addTerm(it.getKey(), it.getValue().docIdSet, it.getValue().countOfRepeats));
+        entryIterator.forEachRemaining(it -> addTerm(it.getKey(), it.getValue().docIdSet.keySet(), it.getValue().countOfRepeats));
     }
 
     private void addTerm(String term, Set<Integer> docIdSet, int countOfRepeat) {

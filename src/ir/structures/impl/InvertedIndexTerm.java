@@ -3,6 +3,7 @@ package ir.structures.impl;
 import ir.fileWork.builder.TermBuilder;
 import ir.search.BooleanSearch;
 import ir.search.BooleanSearchable;
+import ir.searchParser.BooleanSearchParser;
 import ir.structures.abstraction.Compressible;
 import ir.structures.abstraction.InvertedIndex;
 
@@ -15,19 +16,20 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
     private Map<String, TermInvertedIndex> index;
     private Set<Integer> docsId;
     private BooleanSearch booleanSearch;
+    private BooleanSearchParser parser;
 
     public InvertedIndexTerm() {
         docsId = new HashSet<>();
         index = new HashMap<>();
         booleanSearch = new BooleanSearch(this);
+        parser = new BooleanSearchParser();
     }
 
     @Override
     public void addTerm(String term, int docId) {
         docsId.add(docId);
         TermInvertedIndex termInvertedIndex = index.computeIfAbsent(term, k -> new TermInvertedIndex(0, new HashSet<>()));
-        termInvertedIndex.countOfRepeats += 1;
-        termInvertedIndex.docIdSet.add(docId);
+        termInvertedIndex.addDocId(docId);
     }
 
     @Override
@@ -41,9 +43,14 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
     }
 
     private Entry<String, TermInvertedIndex> sortEntry(Entry<String, TermInvertedIndex> entry) {
-        TermInvertedIndex termInvertedIndex = new TermInvertedIndex(entry.getValue().countOfRepeats, entry.getValue().docIdSet.stream().sorted().collect(Collectors.toCollection(LinkedHashSet::new)));
+        TermInvertedIndex termInvertedIndex = new TermInvertedIndex(entry.getValue().countOfRepeats,
+                sortedSet(entry.getValue().docIdSet));
         entry.setValue(termInvertedIndex);
         return entry;
+    }
+
+    private Set<Integer> sortedSet(Set<Integer> set) {
+        return set.stream().sorted().collect(Collectors.toCollection(TreeSet::new));
     }
 
     @Override
@@ -58,12 +65,10 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
         return mapStream.map(it -> it.getKey() + TermBuilder.SPLIT_SIGN + it.getValue().toString());
     }
 
-
     @Override
     public Set<Integer> search(String query) {
-        return booleanSearch.search(query);
+        return booleanSearch.search(parser.parse(query));
     }
-
 
     @Override
     public Set<Integer> getIdSet(String term) {
@@ -83,7 +88,6 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
         return result;
     }
 
-
     public class TermInvertedIndex {
         int countOfRepeats;
         Set<Integer> docIdSet;
@@ -93,17 +97,11 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
             this.docIdSet = docIdSet;
         }
 
-        public int getCountOfRepeats() {
-            return countOfRepeats;
+        private void addDocId(int docId) {
+            docIdSet.add(docId);
+            countOfRepeats++;
         }
 
-        public void setCountOfRepeats(int countOfRepeats) {
-            this.countOfRepeats = countOfRepeats;
-        }
-
-        public Set<Integer> getDocIdSet() {
-            return docIdSet;
-        }
 
         @Override
         public String toString() {

@@ -7,19 +7,14 @@ import ir.structures.abstraction.Searchable;
 import java.util.Iterator;
 import java.util.Set;
 
-public class BooleanSearch implements Searchable<Set<Integer>> {
+public class BooleanSearch {
     private BooleanSearchable structure;
-    private BooleanSearchParser parser;
-
 
     public BooleanSearch(BooleanSearchable structure) {
         this.structure = structure;
-        parser = new BooleanSearchParser();
     }
 
-    @Override
-    public Set<Integer> search(String query) {
-        BooleanSearchParser.BoolSearchParsedQuery parsedQuery = parser.parse(query);
+    public Set<Integer> search(BooleanSearchParser.BoolSearchParsedQuery parsedQuery) {
         Iterator<String> operationIterator = parsedQuery.getOperations().iterator();
         Iterator<String> termIterator = parsedQuery.getTerms().iterator();
         Set<Integer> res = getNeededDocIdSet(termIterator.next());
