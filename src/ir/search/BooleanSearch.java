@@ -7,11 +7,13 @@ import ir.structures.abstraction.Searchable;
 import java.util.Iterator;
 import java.util.Set;
 
-public class BooleanSearch {
+public class BooleanSearch{
     private BooleanSearchable structure;
+    private BooleanSearchParser parser;
 
     public BooleanSearch(BooleanSearchable structure) {
         this.structure = structure;
+        parser = new BooleanSearchParser();
     }
 
     public Set<Integer> search(BooleanSearchParser.BoolSearchParsedQuery parsedQuery) {

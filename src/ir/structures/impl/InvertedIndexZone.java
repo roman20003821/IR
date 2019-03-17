@@ -5,24 +5,32 @@ import ir.search.BooleanSearchable;
 import ir.search.Rangable;
 import ir.search.Ranging;
 import ir.searchParser.BooleanSearchParser;
+import ir.structures.abstraction.TermWeightCountable;
 import ir.tools.Pair;
+import ir.tools.SearchUtility;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class InvertedIndexZone implements ir.structures.abstraction.InvertedIndexZone, BooleanSearchable, Rangable {
+public class InvertedIndexZone
+        implements ir.structures.abstraction.InvertedIndexZone, BooleanSearchable, Rangable, TermWeightCountable {
+    private static final int B1 = 1;
+    private static final int B2 = 1;
+
     private Map<String, TermZone> data;
     private Set<Integer> docsId;
-    private BooleanSearch search;
     private BooleanSearchParser parser;
     private Ranging ranging;
     private Map<String, Double> zoneToWeightMap;
+    private VectorSpace vectorSpace;
+    private Clusters clusters;
 
     public InvertedIndexZone() {
         data = new HashMap<>();
         docsId = new HashSet<>();
-        search = new BooleanSearch(this);
         parser = new BooleanSearchParser();
-        ranging = new Ranging(this, docsId);
+        ranging = new Ranging(this);
+        vectorSpace = new VectorSpace();
     }
 
     @Override
@@ -30,14 +38,58 @@ public class InvertedIndexZone implements ir.structures.abstraction.InvertedInde
         docsId.add(docId);
         TermZone termZone = data.computeIfAbsent(term, k -> new TermZone(new HashMap<>()));
         termZone.addZone(docId, zone);
+        vectorSpace.addDocIdAndTerm(docId, term);
+    }
+
+    public void finishInserting() {
+        clusters = new Clusters(docsId, B1);
     }
 
     @Override
     public Set<Integer> search(String query, Map<String, Double> zoneWeights) {
         this.zoneToWeightMap = zoneWeights;
         BooleanSearchParser.BoolSearchParsedQuery parsedQuery = parser.parse(query);
-        Set<Integer> champions = search.search(parsedQuery);
-        return ranging.range(champions, (String[]) parsedQuery.getTerms().toArray());
+        return ranging.range(takeRelevanceDocs((String[]) parsedQuery.getTerms().toArray()), (String[]) parsedQuery.getTerms().toArray());
+    }
+
+    private Set<Integer> takeRelevanceDocs(String[] queryTokens) {
+        return takeRelevanceDocs(Set.of(queryTokens));
+    }
+
+    private Set<Integer> takeRelevanceDocs(Set<String> queryTokens) {
+        Set<Integer> mostRelevanceLeaders = mostRelevanceLeaders(queryTokens, B2);
+        return getSetOfLeadersAndFollowers(mostRelevanceLeaders);
+    }
+
+    private Set<Integer> getSetOfLeadersAndFollowers(Set<Integer> leaders) {
+        Iterator<Integer> leadersIterator = leaders.iterator();
+        if (!leadersIterator.hasNext()) return Collections.emptySet();
+        Set<Integer> res = getSetOfLeaderAndFollowers(leadersIterator.next());
+        while (leadersIterator.hasNext()) {
+            res = SearchUtility.unity(res.iterator(), getSetOfLeaderAndFollowers(leadersIterator.next()).iterator());
+        }
+        return res;
+    }
+
+    private Set<Integer> getSetOfLeaderAndFollowers(int leader) {
+        return clusters.setOfLeaderAndFollowers(leader);
+    }
+
+    private Set<Integer> mostRelevanceLeaders(Set<String> queryTokens, int b2) {
+        Set<Integer> leaders = clusters.leaders();
+        VectorSpace.Vector vector = new VectorSpace.Vector(queryTokens);
+        Set<Integer> sortedWithSim = leaders.stream().sorted((o1, o2) -> Double.compare(vectorSpace.cosSimilarity(o1, vector, this),
+                vectorSpace.cosSimilarity(o2, vector, this))).collect(Collectors.toCollection(TreeSet::new));
+        return cutDownSet(sortedWithSim, b2);
+    }
+
+    private Set<Integer> cutDownSet(Set<Integer> set, int n) {
+        Set<Integer> res = new HashSet<>();
+        Iterator<Integer> setIterator = set.iterator();
+        for (int i = 0; i < n && setIterator.hasNext(); i++) {
+            res.add(setIterator.next());
+        }
+        return res;
     }
 
     @Override
@@ -66,14 +118,8 @@ public class InvertedIndexZone implements ir.structures.abstraction.InvertedInde
     }
 
     @Override
-    public int getNumberOfDocuments() {
-        return docsId.size();
-    }
-
-    @Override
-    public int getDocumentFrequency(String term) {
-        TermZone termZone = data.get(term);
-        return termZone == null ? 0 : termZone.getDocumentFrequency();
+    public TermWeightCountable getTermWeightCountable() {
+        return this;
     }
 
     @Override
@@ -87,6 +133,20 @@ public class InvertedIndexZone implements ir.structures.abstraction.InvertedInde
         TermZone termZone = data.get(term);
         if (termZone == null) return false;
         return termZone.isPresentInZone(docId, zone);
+    }
+
+    @Override
+    public double termWeightInDoc(String term, int docId) {
+        return getTermFrequencyInDoc(docId, term) * Math.log(getNumberOfDocuments() / (getDocumentFrequency(term) + .0));
+    }
+
+    public int getNumberOfDocuments() {
+        return docsId.size();
+    }
+
+    public int getDocumentFrequency(String term) {
+        TermZone termZone = data.get(term);
+        return termZone == null ? 0 : termZone.getDocumentFrequency();
     }
 
     public class TermZone {

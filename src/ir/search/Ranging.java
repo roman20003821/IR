@@ -5,7 +5,7 @@ import java.util.*;
 public class Ranging {
     private Rangable rangable;
 
-    public Ranging(Rangable rangable, Set<Integer> docsId) {
+    public Ranging(Rangable rangable) {
         this.rangable = rangable;
     }
 
@@ -51,12 +51,8 @@ public class Ranging {
     private double sumOfTermsWeight(int docId, String[] queryTerms) {
         double sum = 0;
         for (String term : queryTerms) {
-            sum += termWeight(docId, term);
+            sum += rangable.getTermWeightCountable().termWeightInDoc(term, docId);
         }
         return sum;
-    }
-
-    private double termWeight(int docId, String term) {
-        return rangable.getTermFrequencyInDoc(docId, term) * Math.log(rangable.getNumberOfDocuments() / (rangable.getDocumentFrequency(term) + .0));
     }
 }
