@@ -1,19 +1,20 @@
 package ir.structures.impl;
 
-import ir.search.BooleanSearch;
 import ir.search.BooleanSearchable;
 import ir.search.Rangable;
 import ir.search.Ranging;
 import ir.searchParser.BooleanSearchParser;
+import ir.structures.abstraction.InvertedIndex;
 import ir.structures.abstraction.TermWeightCountable;
 import ir.tools.Pair;
 import ir.tools.SearchUtility;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class InvertedIndexZone
-        implements ir.structures.abstraction.InvertedIndexZone, BooleanSearchable, Rangable, TermWeightCountable {
+        implements InvertedIndex<InvertedIndexZone.EditableEntry, String>, BooleanSearchable, Rangable, TermWeightCountable {
     private static final int B1 = 1;
     private static final int B2 = 1;
 
@@ -34,7 +35,29 @@ public class InvertedIndexZone
     }
 
     @Override
-    public void addTerm(String term, int docId, String zone) {
+    public void addTerm(String term, EditableEntry entry) {
+        addTerm(term, entry.docId, entry.zone);
+    }
+
+    @Override
+    public void clear() {
+        data.clear();
+        docsId.clear();
+        vectorSpace.clear();
+        clusters.clear();
+    }
+
+    @Override
+    public int getSize() {
+        return data.size();
+    }
+
+    @Override
+    public Stream<String> getSortedStream() {
+        return null;
+    }
+
+    private void addTerm(String term, int docId, String zone) {
         docsId.add(docId);
         TermZone termZone = data.computeIfAbsent(term, k -> new TermZone(new HashMap<>()));
         termZone.addZone(docId, zone);
@@ -46,8 +69,7 @@ public class InvertedIndexZone
     }
 
     @Override
-    public Set<Integer> search(String query, Map<String, Double> zoneWeights) {
-        this.zoneToWeightMap = zoneWeights;
+    public Set<Integer> search(String query) {
         BooleanSearchParser.BoolSearchParsedQuery parsedQuery = parser.parse(query);
         return ranging.range(takeRelevanceDocs((String[]) parsedQuery.getTerms().toArray()), (String[]) parsedQuery.getTerms().toArray());
     }
@@ -149,7 +171,11 @@ public class InvertedIndexZone
         return termZone == null ? 0 : termZone.getDocumentFrequency();
     }
 
-    public class TermZone {
+    public void setData(Map<String, TermZone> data) {
+        this.data = data;
+    }
+
+    public static class TermZone {
         private Map<Integer, Pair<Set<String>, Integer>> docInfo;
 
         public TermZone(Map<Integer, Pair<Set<String>, Integer>> docInfo) {
@@ -176,6 +202,16 @@ public class InvertedIndexZone
             Pair<Set<String>, Integer> zonesAndFrequency = docInfo.get(docId);
             if (zonesAndFrequency == null) return false;
             return zonesAndFrequency.getKey().contains(zone);
+        }
+    }
+
+    public static class EditableEntry {
+        private int docId;
+        private String zone;
+
+        public EditableEntry(int docId, String zone) {
+            this.docId = docId;
+            this.zone = zone;
         }
     }
 }

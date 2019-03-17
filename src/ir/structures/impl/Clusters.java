@@ -18,6 +18,10 @@ public class Clusters {
         data = clusterPruning.leadersToFollowersMap(b1);
     }
 
+    public void clear() {
+        data.clear();
+    }
+
     public Set<Integer> setOfLeaderAndFollowers(int leader) {
         Set<Integer> set = new HashSet<>(leader);
         set.addAll(followers(leader));

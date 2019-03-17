@@ -5,7 +5,7 @@ import ir.structures.abstraction.InvertedIndex;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class InvertedIndexTree implements InvertedIndex {
+public class InvertedIndexTree implements InvertedIndex<Integer, String> {
 
     private static int ALPHABET_SIZE = 26;
 
@@ -18,7 +18,7 @@ public class InvertedIndexTree implements InvertedIndex {
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, Integer docId) {
         trie.addTerm(term);
         reversed.addTerm(new StringBuilder(term).reverse().toString());
     }

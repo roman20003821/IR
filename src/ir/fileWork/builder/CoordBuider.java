@@ -1,5 +1,6 @@
 package ir.fileWork.builder;
 
+import ir.structures.abstraction.InvertedIndex;
 import ir.structures.impl.InvertedIndexTermCoords;
 
 import java.io.BufferedReader;
@@ -11,10 +12,10 @@ import java.util.StringTokenizer;
 
 public class CoordBuider implements Builder {
 
-    private InvertedIndexTermCoords indexTermCoords;
+    private InvertedIndex index;
 
-    public CoordBuider(InvertedIndexTermCoords indexTermCoords) {
-        this.indexTermCoords = indexTermCoords;
+    public CoordBuider(InvertedIndex index) {
+        this.index = index;
     }
 
     public void build(int docId, String fileName, int maxBlockSize) throws IOException {
@@ -27,7 +28,7 @@ public class CoordBuider implements Builder {
             while (tokenizer.hasMoreTokens()) {
                 String token = tokenizer.nextToken();
                 if (token != null)
-                    indexTermCoords.addTerm(token, docId, pos++);
+                    index.addTerm(token, new InvertedIndexTermCoords.EditableEntry(docId, pos++));
             }
         }
     }

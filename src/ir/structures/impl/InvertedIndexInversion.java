@@ -7,7 +7,7 @@ import ir.structures.abstraction.InvertedIndex;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class InvertedIndexInversion implements InvertedIndex {
+public class InvertedIndexInversion implements InvertedIndex<Integer, String> {
     private static final int ALPHABET_SIZE = 27;
     private InversionParser inversionParser;
     private Trie trie;
@@ -20,11 +20,9 @@ public class InvertedIndexInversion implements InvertedIndex {
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, Integer docId) {
         List<String> parsedTerm = inversionParser.parseTerm(term);
-        parsedTerm.forEach(it -> {
-            trie.addTerm(it);
-        });
+        parsedTerm.forEach(it -> trie.addTerm(it));
     }
 
     @Override

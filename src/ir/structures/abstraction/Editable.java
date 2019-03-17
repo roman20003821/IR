@@ -2,8 +2,8 @@ package ir.structures.abstraction;
 
 import java.util.stream.Stream;
 
-public interface Editable {
-    void addTerm(String term, int docId);
+public interface Editable<T> {
+    void addTerm(String term, T entry);
 
     void clear();
 

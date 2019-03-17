@@ -1,41 +1,19 @@
 package ir.fileWork.builder;
 
-import ir.structures.IndexType;
-import ir.structures.abstraction.Editable;
-import ir.structures.impl.InvertedIndexTermCoords;
+import ir.structures.abstraction.InvertedIndex;
+import ir.structures.impl.*;
 
 public class BuilderFactory {
 
-    private Editable editable;
-    private InvertedIndexTermCoords editableWithCoords;
-
-    public BuilderFactory(Editable editable) {
-        this.editable = editable;
+    public Builder getEditableBuilder(InvertedIndex index) throws IllegalStateException {
+        if (index instanceof InvertedIndexGram || index instanceof InvertedIndexTree ||
+                index instanceof InvertedIndexInversion)
+            return new TermBuilder(index);
+        else if (index instanceof InvertedIndexTermCoords)
+            return new CoordBuider(index);
+        else if (index instanceof InvertedIndexPhrase)
+            return new PhraseBuilder(index);
+        else
+            throw new IllegalArgumentException("There is no builder for this index: " + index.getClass().getSimpleName());
     }
-
-    public BuilderFactory(InvertedIndexTermCoords editableWithCoords) {
-        this.editableWithCoords = editableWithCoords;
-    }
-
-    public Builder getEditableBuilder(IndexType type) throws IllegalStateException {
-        switch (type) {
-            case TERM:
-            case GRAM:
-            case TREE:
-            case MATRIX:
-            case INVERSION:
-                if (editable == null) throw new IllegalStateException("You must use another constructor");
-                return new TermBuilder(editable);
-            case TERM_WITH_COORDS:
-                if (editableWithCoords == null) throw new IllegalStateException("You must use another constructor");
-                return new CoordBuider(editableWithCoords);
-            case PHRASE:
-                if (editable == null) throw new IllegalStateException("You must use another constructor");
-                return new PhraseBuilder(editable);
-            default:
-                return null;
-        }
-    }
-
-
 }

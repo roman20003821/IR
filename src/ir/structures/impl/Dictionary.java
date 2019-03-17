@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-public class Dictionary implements Editable, Compressible<Dictionary.DictionaryEntry>, Serializable {
+public class Dictionary implements Editable<Dictionary.DictionaryEntry>, Compressible<Dictionary.DictionaryEntry>, Serializable {
     private int size;
     private DictionaryEntry[] data;
 
@@ -20,7 +20,7 @@ public class Dictionary implements Editable, Compressible<Dictionary.DictionaryE
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, DictionaryEntry entry) {
         if (term == null) throw new IllegalArgumentException("Term is null");
         if (data.length == size) resize(data.length * 2);
         int pos = getPos(term);

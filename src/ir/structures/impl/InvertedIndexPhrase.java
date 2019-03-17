@@ -7,7 +7,7 @@ import ir.structures.abstraction.InvertedIndex;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class InvertedIndexPhrase implements InvertedIndex {
+public class InvertedIndexPhrase implements InvertedIndex<Integer, String> {
 
     private Map<String, HashSet<Integer>> index;
     private PhraseParser parser;
@@ -18,7 +18,7 @@ public class InvertedIndexPhrase implements InvertedIndex {
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, Integer docId) {
         HashSet<Integer> docIdSet = index.computeIfAbsent(term.toLowerCase(), k -> new HashSet<>());
         docIdSet.add(docId);
     }

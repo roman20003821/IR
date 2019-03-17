@@ -12,8 +12,8 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Compressible<Entry<String, InvertedIndexTerm.TermInvertedIndex>> {
-    private Map<String, TermInvertedIndex> index;
+public class InvertedIndexTerm implements InvertedIndex<Integer, String>, BooleanSearchable, Compressible<Entry<String, InvertedIndexTerm.TermInvIndexEntry>> {
+    private Map<String, TermInvIndexEntry> index;
     private Set<Integer> docsId;
     private BooleanSearch booleanSearch;
     private BooleanSearchParser parser;
@@ -26,10 +26,10 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, Integer docId) {
         docsId.add(docId);
-        TermInvertedIndex termInvertedIndex = index.computeIfAbsent(term, k -> new TermInvertedIndex(0, new HashSet<>()));
-        termInvertedIndex.addDocId(docId);
+        TermInvIndexEntry termInvIndexEntry = index.computeIfAbsent(term, k -> new TermInvIndexEntry(0, new HashSet<>()));
+        termInvIndexEntry.addDocId(docId);
     }
 
     @Override
@@ -38,14 +38,14 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
     }
 
     @Override
-    public Stream<Entry<String, TermInvertedIndex>> getSortedEntryStream() {
+    public Stream<Entry<String, TermInvIndexEntry>> getSortedEntryStream() {
         return index.entrySet().stream().sorted().map(this::sortEntry);
     }
 
-    private Entry<String, TermInvertedIndex> sortEntry(Entry<String, TermInvertedIndex> entry) {
-        TermInvertedIndex termInvertedIndex = new TermInvertedIndex(entry.getValue().countOfRepeats,
+    private Entry<String, TermInvIndexEntry> sortEntry(Entry<String, TermInvIndexEntry> entry) {
+        TermInvIndexEntry termInvIndexEntry = new TermInvIndexEntry(entry.getValue().countOfRepeats,
                 sortedSet(entry.getValue().docIdSet));
-        entry.setValue(termInvertedIndex);
+        entry.setValue(termInvIndexEntry);
         return entry;
     }
 
@@ -60,7 +60,7 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
 
     @Override
     public Stream<String> getSortedStream() {
-        Stream<Map.Entry<String, TermInvertedIndex>> mapStream = index.entrySet().stream();
+        Stream<Map.Entry<String, TermInvIndexEntry>> mapStream = index.entrySet().stream();
         mapStream = mapStream.sorted(Comparator.comparing(Map.Entry::getKey));
         return mapStream.map(it -> it.getKey() + TermBuilder.SPLIT_SIGN + it.getValue().toString());
     }
@@ -72,9 +72,9 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
 
     @Override
     public Set<Integer> getIdSet(String term) {
-        TermInvertedIndex termInvertedIndex = index.get(term);
-        if (termInvertedIndex == null) return Collections.emptySet();
-        return termInvertedIndex.docIdSet;
+        TermInvIndexEntry termInvIndexEntry = index.get(term);
+        if (termInvIndexEntry == null) return Collections.emptySet();
+        return termInvIndexEntry.docIdSet;
     }
 
     @Override
@@ -88,11 +88,11 @@ public class InvertedIndexTerm implements InvertedIndex, BooleanSearchable, Comp
         return result;
     }
 
-    public class TermInvertedIndex {
+    public static class TermInvIndexEntry {
         int countOfRepeats;
         Set<Integer> docIdSet;
 
-        public TermInvertedIndex(int countOfRepeats, Set<Integer> docIdSet) {
+        public TermInvIndexEntry(int countOfRepeats, Set<Integer> docIdSet) {
             this.countOfRepeats = countOfRepeats;
             this.docIdSet = docIdSet;
         }

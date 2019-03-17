@@ -8,7 +8,7 @@ import ir.structures.abstraction.Searchable;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class IncidenceMatrix implements Searchable<Set<Integer>>, Editable {
+public class IncidenceMatrix implements Searchable<String>, Editable<Integer> {
 
     private int[] documentsId;
     private Map<String, byte[]> matrix;
@@ -22,7 +22,7 @@ public class IncidenceMatrix implements Searchable<Set<Integer>>, Editable {
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, Integer docId) {
         int docPos = Arrays.binarySearch(documentsId, docId);
         if (docId == -1) throw new IllegalArgumentException("Doc id was not found");
         byte[] idLine = matrix.computeIfAbsent(term.toLowerCase(), k -> new byte[documentsId.length]);

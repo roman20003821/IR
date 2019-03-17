@@ -7,7 +7,7 @@ import ir.structures.impl.Dictionary.DictionaryEntry;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-public class CompressedDictionary implements Searchable<Integer> {
+public class CompressedDictionary {
     private static final char PREFIX_END_SIGN = '*';
     private static final int SMALLER = -2;
     private static final int BIGGER = -1;
@@ -107,7 +107,6 @@ public class CompressedDictionary implements Searchable<Integer> {
         return term.substring(prefix.length());
     }
 
-    @Override
     public Integer search(String term) {
         return search(term, 0, blockPointers.length - 1);
     }

@@ -3,9 +3,11 @@ package ir.fileWork.builder;
 import ir.Tester;
 import ir.fileWork.FileWorker;
 import ir.structures.abstraction.Editable;
+import ir.tools.Pair;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class TermBuilder implements Builder {
 
@@ -90,6 +92,11 @@ public class TermBuilder implements Builder {
         writer.close();
     }
 
+    @Override
+    public void build(Stream<Pair<String, Integer>> termAndDocIdStream) {
+        termAndDocIdStream.forEach(pair -> editable.addTerm(pair.getKey(), pair.getValue()));
+    }
+
     private void merge(BufferedWriter writer, List<BufferedReader> readers, List<String[]> parsedLines) {
         int smallestIndex = findSmallestIndex(parsedLines);
         String[] toWrite = parsedLines.get(findSmallestIndex(parsedLines));
@@ -157,14 +164,14 @@ public class TermBuilder implements Builder {
     private void tryToGetNextLine(List<BufferedReader> readers, List<String[]> lines, int index) {
         String line = readLine(readers.get(index));
         if (line == null) {
-            tryTocloseReader(readers.remove(index));
+            tryToCloseReader(readers.remove(index));
             lines.remove(index);
         } else {
             lines.set(index, parseLine(line));
         }
     }
 
-    private void tryTocloseReader(BufferedReader reader) {
+    private void tryToCloseReader(BufferedReader reader) {
         try {
             reader.close();
         } catch (IOException e) {

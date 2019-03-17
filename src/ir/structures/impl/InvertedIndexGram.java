@@ -7,20 +7,19 @@ import ir.structures.abstraction.InvertedIndex;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class InvertedIndexGram implements InvertedIndex {
+public class InvertedIndexGram implements InvertedIndex<Integer, String> {
     private Map<String, Set<String>> gramIndex;
     private InvertedIndexTerm invertedIndexTerm;
     private GramParser parser;
-    private static final int GRAM_TYPE = 3;
 
-    public InvertedIndexGram(InvertedIndexTerm invertedIndexTerm) {
+    public InvertedIndexGram(InvertedIndexTerm invertedIndexTerm, int gramType) {
         this.invertedIndexTerm = invertedIndexTerm;
         gramIndex = new HashMap<>();
-        parser = new GramParser(GRAM_TYPE);
+        parser = new GramParser(gramType);
     }
 
     @Override
-    public void addTerm(String term, int docId) {
+    public void addTerm(String term, Integer docId) {
         List<String> parsedTerm = parser.parseTerm(term);
         parsedTerm.forEach(it -> {
             Set<String> termList = gramIndex.computeIfAbsent(it, k -> new HashSet<>());
@@ -75,5 +74,4 @@ public class InvertedIndexGram implements InvertedIndex {
         });
         return docIdSet;
     }
-
 }

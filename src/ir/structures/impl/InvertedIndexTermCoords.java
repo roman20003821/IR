@@ -2,17 +2,17 @@ package ir.structures.impl;
 
 import ir.searchParser.CoordinateParser;
 import ir.searchParser.CoordinateParser.SearchToken;
+import ir.structures.abstraction.InvertedIndex;
 import ir.tools.SearchUtility;
-import ir.structures.abstraction.InvertedIndexCoords;
 import ir.structures.SortedArrayList;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 
-public class InvertedIndexTermCoords implements InvertedIndexCoords {
+public class InvertedIndexTermCoords implements InvertedIndex<InvertedIndexTermCoords.EditableEntry, String> {
 
-    private Map<String, TermInvertedCoords> index;
+    private Map<String, CoordsInvIndexEntry> index;
     private CoordinateParser parser;
 
     public InvertedIndexTermCoords() {
@@ -21,11 +21,15 @@ public class InvertedIndexTermCoords implements InvertedIndexCoords {
     }
 
     @Override
-    public void addTerm(String term, int docId, int position) {
-        TermInvertedCoords termInvertedCoords = index.computeIfAbsent(term.toLowerCase(), k -> new TermInvertedCoords());
-        ArrayList<Integer> termPositions = termInvertedCoords.docIdToPositions.computeIfAbsent(docId, k -> new SortedArrayList<>());
+    public void addTerm(String term, EditableEntry entry) {
+        addTerm(term, entry.docId, entry.pos);
+    }
+
+    private void addTerm(String term, int docId, int position) {
+        CoordsInvIndexEntry coordsInvIndexEntry = index.computeIfAbsent(term.toLowerCase(), k -> new CoordsInvIndexEntry());
+        ArrayList<Integer> termPositions = coordsInvIndexEntry.docIdToPositions.computeIfAbsent(docId, k -> new SortedArrayList<>());
         termPositions.add(position);
-        termInvertedCoords.countOfRepeats++;
+        coordsInvIndexEntry.countOfRepeats++;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class InvertedIndexTermCoords implements InvertedIndexCoords {
 
     @Override
     public Stream<String> getSortedStream() {
-        Stream<Map.Entry<String, TermInvertedCoords>> mapStream = index.entrySet().stream();
+        Stream<Map.Entry<String, CoordsInvIndexEntry>> mapStream = index.entrySet().stream();
         return mapStream.sorted().map(it -> it.getKey() + " " + it.getValue().toString());
     }
 
@@ -64,8 +68,8 @@ public class InvertedIndexTermCoords implements InvertedIndexCoords {
     }
 
     private Set<Integer> getDocId(String term) {
-        TermInvertedCoords termInvertedCoords = getTermInfo(term);
-        return termInvertedCoords.getDocIdToPositions().keySet();
+        CoordsInvIndexEntry coordsInvIndexEntry = getTermInfo(term);
+        return coordsInvIndexEntry.getDocIdToPositions().keySet();
     }
 
     private void filterToNearTerms(Queue<SearchToken> searchTokens, Set<Integer> toFilter) {
@@ -104,9 +108,9 @@ public class InvertedIndexTermCoords implements InvertedIndexCoords {
     }
 
     private List<Integer> getDocIdPositions(String term, int docId) {
-        TermInvertedCoords termInvertedCoords = index.get(term);
-        if (termInvertedCoords == null) return Collections.emptyList();
-        List<Integer> positions = termInvertedCoords.docIdToPositions.get(docId);
+        CoordsInvIndexEntry coordsInvIndexEntry = index.get(term);
+        if (coordsInvIndexEntry == null) return Collections.emptyList();
+        List<Integer> positions = coordsInvIndexEntry.docIdToPositions.get(docId);
         return positions == null ? Collections.emptyList() : positions;
     }
 
@@ -117,19 +121,19 @@ public class InvertedIndexTermCoords implements InvertedIndexCoords {
         return -1;
     }
 
-    public TermInvertedCoords getTermInfo(String term) {
+    public CoordsInvIndexEntry getTermInfo(String term) {
         return index.get(term);
     }
 
-    public static class TermInvertedCoords {
+    public static class CoordsInvIndexEntry {
         int countOfRepeats;
-        HashMap<Integer, SortedArrayList<Integer>> docIdToPositions;
+        Map<Integer, SortedArrayList<Integer>> docIdToPositions;
 
-        public TermInvertedCoords() {
+        public CoordsInvIndexEntry() {
             docIdToPositions = new HashMap<>();
         }
 
-        public HashMap<Integer, SortedArrayList<Integer>> getDocIdToPositions() {
+        public Map<Integer, SortedArrayList<Integer>> getDocIdToPositions() {
             return docIdToPositions;
         }
 
@@ -155,5 +159,15 @@ public class InvertedIndexTermCoords implements InvertedIndexCoords {
             });
         }
 
+    }
+
+    public static class EditableEntry {
+        private int docId;
+        private int pos;
+
+        public EditableEntry(int docId, int pos) {
+            this.docId = docId;
+            this.pos = pos;
+        }
     }
 }

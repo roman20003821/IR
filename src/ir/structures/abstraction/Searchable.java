@@ -1,5 +1,7 @@
 package ir.structures.abstraction;
 
+import java.util.Set;
+
 public interface Searchable<T> {
-    T search(String query);
+    Set<Integer> search(T query);
 }

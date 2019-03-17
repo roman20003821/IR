@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-import ir.structures.impl.InvertedIndexTerm.TermInvertedIndex;
+import ir.structures.impl.InvertedIndexTerm.TermInvIndexEntry;
 
 public class CompressedIndex implements Searchable<Set<Integer>>, BooleanSearchable {
 
@@ -21,24 +21,24 @@ public class CompressedIndex implements Searchable<Set<Integer>>, BooleanSearcha
     private Set<Integer> docsId;
     private BooleanSearch booleanSearch;
 
-    public CompressedIndex(Compressible<Entry<String, TermInvertedIndex>> compressible) {
+    public CompressedIndex(Compressible<Entry<String, TermInvIndexEntry>> compressible) {
         data = new HashMap<>(compressible.getSize());
         docsId = new HashSet<>();
         booleanSearch = new BooleanSearch(this);
         compress(compressible);
     }
 
-    private void compress(Compressible<Entry<String, TermInvertedIndex>> compressible) {
-        Stream<Entry<String, TermInvertedIndex>> entryStream = compressible.getSortedEntryStream();
+    private void compress(Compressible<Entry<String, TermInvIndexEntry>> compressible) {
+        Stream<Entry<String, TermInvIndexEntry>> entryStream = compressible.getSortedEntryStream();
         compress(entryStream);
     }
 
-    private void compress(Stream<Entry<String, TermInvertedIndex>> entryStream) {
-        Iterator<Entry<String, TermInvertedIndex>> entryIterator = entryStream.iterator();
+    private void compress(Stream<Entry<String, TermInvIndexEntry>> entryStream) {
+        Iterator<Entry<String, TermInvIndexEntry>> entryIterator = entryStream.iterator();
         compress(entryIterator);
     }
 
-    private void compress(Iterator<Entry<String, TermInvertedIndex>> entryIterator) {
+    private void compress(Iterator<Entry<String, TermInvIndexEntry>> entryIterator) {
         entryIterator.forEachRemaining(it -> addTerm(it.getKey(), it.getValue().docIdSet.keySet(), it.getValue().countOfRepeats));
     }
 
