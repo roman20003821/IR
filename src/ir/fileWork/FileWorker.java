@@ -67,7 +67,6 @@ public class FileWorker {
             current.append(directory).append("/");
             createDirectoryIfNotExist(current.toString());
         }
-
     }
 
     private static void createDirectoryIfNotExist(String directoryPath) {

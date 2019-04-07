@@ -1,5 +1,6 @@
 package ir.fileWork.builder;
 
+import ir.fileWork.termStream.StreamEntity;
 import ir.tools.Pair;
 
 import java.io.IOException;
@@ -13,5 +14,5 @@ public interface Builder {
 
     void merge(List<String> fileNames, String mergedFile) throws IOException;
 
-    void build(Stream<Pair<String, Integer>> termAndDocIdStream);
+    void build(Stream<Pair<StreamEntity, Integer>> entityAndDocIdStream);
 }

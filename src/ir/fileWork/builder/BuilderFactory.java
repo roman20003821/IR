@@ -10,7 +10,7 @@ public class BuilderFactory {
                 index instanceof InvertedIndexInversion)
             return new TermBuilder(index);
         else if (index instanceof InvertedIndexTermCoords)
-            return new CoordBuider(index);
+            return new CoordBuilder(index);
         else if (index instanceof InvertedIndexPhrase)
             return new PhraseBuilder(index);
         else

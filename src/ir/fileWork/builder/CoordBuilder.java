@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-public class CoordBuider implements Builder {
+public class CoordBuilder implements Builder {
 
     private InvertedIndex index;
 
-    public CoordBuider(InvertedIndex index) {
+    public CoordBuilder(InvertedIndex index) {
         this.index = index;
     }
 

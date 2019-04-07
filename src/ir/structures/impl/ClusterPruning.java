@@ -26,7 +26,7 @@ public class ClusterPruning {
 
     private void separateSet(int b1) {
         int n = (int) Math.sqrt(docIdSet.size());
-        if (b1 > docIdSet.size()) throw new IllegalArgumentException(b1 + " < leaders size: " + n);
+        if (b1 > docIdSet.size()-n) throw new IllegalArgumentException(b1 + " < leaders size: " + n);
         List<Integer> leaders = getLeaders(n);
         int counter = 0;
         int currentLeader = 0;

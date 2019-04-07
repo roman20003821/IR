@@ -1,4 +1,4 @@
-package ir.fileWork.builder;
+package ir.fileWork.termStream;
 
 import ir.tools.Pair;
 
@@ -11,21 +11,21 @@ import java.util.stream.Stream;
 
 public class SimpleFileStreamCreator implements StreamCreator {
 
-    private Analyser simpleAnalyser;
+    private Analyser analyser;
 
-    public SimpleFileStreamCreator() {
-        simpleAnalyser = new SimpleAnalyser();
+    public SimpleFileStreamCreator(Analyser analyser) {
+        this.analyser = analyser;
     }
 
     @Override
-    public Stream<Pair<String, Integer>> termAndDocIdStream(String path, int docId) throws IOException {
+    public Stream<Pair<StreamEntity, Integer>> termAndDocIdStream(String path, int docId) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(path));
-        List<String> termsList = new LinkedList<>();
-        String line = null;
+        List<StreamEntity> termsList = new LinkedList<>();
+        String line;
         while (true) {
             line = reader.readLine();
             if (line == null) break;
-            termsList.addAll(simpleAnalyser.analyse(line));
+            analyser.analyse(line).forEach(term -> termsList.add(new StreamEntity(term)));
         }
         return termsList.stream().map(it -> new Pair<>(it, docId));
     }

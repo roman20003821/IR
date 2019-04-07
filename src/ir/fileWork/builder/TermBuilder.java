@@ -2,6 +2,7 @@ package ir.fileWork.builder;
 
 import ir.Tester;
 import ir.fileWork.FileWorker;
+import ir.fileWork.termStream.StreamEntity;
 import ir.structures.abstraction.Editable;
 import ir.tools.Pair;
 
@@ -93,8 +94,8 @@ public class TermBuilder implements Builder {
     }
 
     @Override
-    public void build(Stream<Pair<String, Integer>> termAndDocIdStream) {
-        termAndDocIdStream.forEach(pair -> editable.addTerm(pair.getKey(), pair.getValue()));
+    public void build(Stream<Pair<StreamEntity, Integer>> termAndDocIdStream) {
+        termAndDocIdStream.forEach(pair -> editable.addTerm(pair.getKey().getTerm(), pair.getValue()));
     }
 
     private void merge(BufferedWriter writer, List<BufferedReader> readers, List<String[]> parsedLines) {

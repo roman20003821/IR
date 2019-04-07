@@ -139,6 +139,14 @@ public class InvertedIndexZone
         return termZone.getFrequencyInDoc(docId);
     }
 
+    public int getTermFrequencyInDoc(String term, Set<String> termsSet) {
+        int res = 0;
+        for (String setEntry : termsSet) {
+            if (term.equals(setEntry)) ++res;
+        }
+        return res;
+    }
+
     @Override
     public TermWeightCountable getTermWeightCountable() {
         return this;
@@ -160,6 +168,11 @@ public class InvertedIndexZone
     @Override
     public double termWeightInDoc(String term, int docId) {
         return getTermFrequencyInDoc(docId, term) * Math.log(getNumberOfDocuments() / (getDocumentFrequency(term) + .0));
+    }
+
+    @Override
+    public double termWeightInDoc(String term, Set<String> termsFormDoc) {
+        return getTermFrequencyInDoc(term, termsFormDoc) * Math.log(getNumberOfDocuments() / ((getDocumentFrequency(term)+1) + .0));
     }
 
     public int getNumberOfDocuments() {
