@@ -1,5 +1,6 @@
 package ir.structures.impl;
 
+import ir.search.BM25;
 import ir.search.BooleanSearchable;
 import ir.search.Rangable;
 import ir.search.Ranging;
@@ -22,8 +23,10 @@ public class InvertedIndexZone
     private Set<Integer> docsId;
     private BooleanSearchParser parser;
     private Ranging ranging;
+    private BM25 termScoreCounter;
     private Map<String, Double> zoneToWeightMap;
     private VectorSpace vectorSpace;
+    private int averageDocLengh;
     private Clusters clusters;
 
     public InvertedIndexZone() {
@@ -31,6 +34,7 @@ public class InvertedIndexZone
         docsId = new HashSet<>();
         parser = new BooleanSearchParser();
         ranging = new Ranging(this);
+        termScoreCounter = new BM25();
         vectorSpace = new VectorSpace();
     }
 
@@ -65,6 +69,7 @@ public class InvertedIndexZone
     }
 
     public void finishInserting() {
+        averageDocLengh = vectorSpace.getAverageVectorLength();
         clusters = new Clusters(docsId, B1);
     }
 
@@ -139,7 +144,7 @@ public class InvertedIndexZone
         return termZone.getFrequencyInDoc(docId);
     }
 
-    public int getTermFrequencyInDoc(String term, Set<String> termsSet) {
+    private int getTermFrequencyInDoc(String term, Set<String> termsSet) {
         int res = 0;
         for (String setEntry : termsSet) {
             if (term.equals(setEntry)) ++res;
@@ -167,31 +172,29 @@ public class InvertedIndexZone
 
     @Override
     public double termWeightInDoc(String term, int docId) {
-        return getTermFrequencyInDoc(docId, term) * Math.log(getNumberOfDocuments() / (getDocumentFrequency(term) + .0));
+        double tf = getTermFrequencyInDoc(docId, term);
+        return termScoreCounter.score(tf, getNumberOfDocuments(), vectorSpace.getVectorLength(docId), averageDocLengh, getDocumentFrequency(term));
     }
 
     @Override
     public double termWeightInDoc(String term, Set<String> termsFormDoc) {
-        return getTermFrequencyInDoc(term, termsFormDoc) * Math.log(getNumberOfDocuments() / ((getDocumentFrequency(term)+1) + .0));
+        double tf = getTermFrequencyInDoc(term, termsFormDoc);
+        return termScoreCounter.score(tf, getNumberOfDocuments(), termsFormDoc.size(), averageDocLengh, getDocumentFrequency(term));
     }
 
-    public int getNumberOfDocuments() {
+    private int getNumberOfDocuments() {
         return docsId.size();
     }
 
-    public int getDocumentFrequency(String term) {
+    private int getDocumentFrequency(String term) {
         TermZone termZone = data.get(term);
         return termZone == null ? 0 : termZone.getDocumentFrequency();
-    }
-
-    public void setData(Map<String, TermZone> data) {
-        this.data = data;
     }
 
     public static class TermZone {
         private Map<Integer, Pair<Set<String>, Integer>> docInfo;
 
-        public TermZone(Map<Integer, Pair<Set<String>, Integer>> docInfo) {
+        TermZone(Map<Integer, Pair<Set<String>, Integer>> docInfo) {
             this.docInfo = docInfo;
         }
 

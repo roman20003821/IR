@@ -8,11 +8,11 @@ public class VectorSpace {
     public static final int UNMENTIONED_DOC_ID = -1;
     private Map<Integer, Vector> data;
 
-    public VectorSpace() {
+    VectorSpace() {
         data = new HashMap<>();
     }
 
-    public void addDocIdAndTerm(int docId, String term) {
+    void addDocIdAndTerm(int docId, String term) {
         Vector vector = data.computeIfAbsent(docId, k -> Vector.emptyVector());
         vector.addTerm(term);
     }
@@ -21,7 +21,21 @@ public class VectorSpace {
         data.clear();
     }
 
-    public double cosSimilarity(int docId, Vector vector, TermWeightCountable termWeightCountable) {
+    public int getAverageVectorLength() {
+        int average = 0;
+        for (Map.Entry<Integer, Vector> mapEntry : data.entrySet()) {
+            average = (average + mapEntry.getValue().getSize()) / 2;
+        }
+        return average;
+    }
+
+    public int getVectorLength(int docId) {
+        Vector vector = data.get(docId);
+        if (vector == null) return 0;
+        return vector.getSize();
+    }
+
+    double cosSimilarity(int docId, Vector vector, TermWeightCountable termWeightCountable) {
         Vector vectorWithDocId = data.get(docId);
         if (vectorWithDocId == null)
             vectorWithDocId = Vector.emptyVector();
@@ -60,6 +74,10 @@ public class VectorSpace {
 
         public void addTerm(String term) {
             termsSet.add(term);
+        }
+
+        public int getSize() {
+            return termsSet.size();
         }
 
         public Iterator<String> getIterator() {

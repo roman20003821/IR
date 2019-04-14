@@ -1,16 +1,22 @@
 package ir;
 
+import ir.fileWork.builder.Builder;
 import ir.fileWork.builder.BuilderFactory;
 import ir.fileWork.builder.TermBuilder;
 import ir.fileWork.FileWorker;
+import ir.fileWork.termStream.SimpleAnalyser;
+import ir.fileWork.termStream.SimpleFileStreamCreator;
+import ir.fileWork.termStream.StreamCreator;
 import ir.structures.IndexType;
 import ir.structures.abstraction.InvertedIndex;
 import ir.structures.impl.InvertedIndexTerm;
+import ir.structures.impl.InvertedIndexZone;
 import ir.tools.Console;
 import ir.tools.IdHelper;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class Tester {
 
@@ -31,13 +37,17 @@ public class Tester {
         FILES_TO_READ = files.size();
         idHelper.addFiles(files);
         System.out.println("Start building...");
-        InvertedIndex invertedIndex = new InvertedIndexTerm();
-        BuilderFactory builderFactory = new BuilderFactory(invertedIndex);
+        InvertedIndex invertedIndex = new InvertedIndexZone();
+        BuilderFactory builderFactory = new BuilderFactory();
+        Builder builder = builderFactory.getEditableBuilder(invertedIndex);
+        StreamCreator streamCreator = new SimpleFileStreamCreator(new SimpleAnalyser());
         long currentTime = System.currentTimeMillis();
         try {
-            builderFactory.getEditableBuilder(IndexType.TERM).buildStructureOnDisk(BLOCK_SIZE, idHelper.getFileInfos());
-            System.out.println(System.currentTimeMillis() - currentTime);
-            System.out.println(TermBuilder.indexCounter);
+            for (Map.Entry<Integer, String> entry : idHelper.getFileInfos().entrySet()) {
+                builder.build(streamCreator.termAndDocIdStream(entry.getValue(),entry.getKey()));
+                System.out.println(System.currentTimeMillis() - currentTime);
+                System.out.println(TermBuilder.indexCounter);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
